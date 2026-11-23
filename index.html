@@ -514,6 +514,13 @@
       border: 1px solid rgba(0, 243, 255, 0.35);
       color: var(--cyan);
       font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .history-tag:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.45);
     }
 
     .history-tag.dislike {
@@ -1534,6 +1541,36 @@
       drawWheel();
     }
 
+    function openHistoryItem(idx) {
+      const item = state.history[idx];
+      if (!item) return;
+
+      currentWinner = item.text;
+      currentServings = 1;
+      isEditingRecipe = false;
+
+      document.getElementById('modalTag').textContent =
+        item.mode === 'like' ? '⚡ MÓN ĐÃ QUAY (ĂN ĐƯỢC) ⚡' : '☠️ MÓN ĐÃ QUAY (KHÔNG THÍCH) ☠️';
+      document.getElementById('modalVisual').textContent = getFoodVisual(item.text);
+      document.getElementById('modalResult').textContent = item.text;
+
+      const photoEl = document.getElementById('modalPhoto');
+      const fallbackEl = document.getElementById('modalPhotoFallback');
+      fallbackEl.style.display = 'none';
+      loadFoodImageMultiSource(item.text, item.mode, photoEl);
+
+      const saved = JSON.parse(localStorage.getItem('customFoodImageUrls') || '{}');
+      const existingUrl = saved[item.text] || (typeof FOOD_IMAGE_MAP !== 'undefined' && FOOD_IMAGE_MAP[item.text] && FOOD_IMAGE_MAP[item.text].url) || '';
+      document.getElementById('googleImgInput').value = existingUrl;
+      document.getElementById('googleSearchLink').href =
+        typeof getGoogleImageSearchUrl === 'function'
+          ? getGoogleImageSearchUrl(item.text)
+          : `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.text + ' món ăn')}`;
+
+      renderModalDetails();
+      document.getElementById('resultModal').classList.add('show');
+    }
+
     function renderHistory() {
       const el = document.getElementById('historyList');
       if (state.history.length === 0) {
@@ -1541,7 +1578,7 @@
         return;
       }
       el.innerHTML = state.history
-        .map(h => `<span class="history-tag ${h.mode === 'dislike' ? 'dislike' : ''}">${h.text}</span>`)
+        .map((h, idx) => `<span class="history-tag ${h.mode === 'dislike' ? 'dislike' : ''}" onclick="openHistoryItem(${idx})" title="Bấm để xem chi tiết">${h.text}</span>`)
         .join('');
     }
 
@@ -1554,5 +1591,5 @@
     renderList();
     drawWheel();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed5a0eef3e0930',t:'MTc5NTQwNzMxNg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed5a0eef3e0930',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed70513d3a277e',t:'MTc5NTQwODIyOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed70513d3a277e',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
