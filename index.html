@@ -871,6 +871,11 @@
         </div>
       </div>
       <div class="modal-result" id="modalResult" style="margin: 8px 0 14px;">---</div>
+      <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+        <input type="text" id="googleImgInput" placeholder="Dán link hình ảnh từ Google vào đây..." style="flex:1; min-width:180px; padding:8px 10px; background:rgba(0,0,0,0.5); border:1px solid rgba(0,243,255,0.4); color:#fff; font-size:0.84rem;" />
+        <button class="mini-btn" style="border-color:var(--cyan); color:var(--cyan);" onclick="saveGoogleImageLink()">Lưu ảnh</button>
+        <a id="googleSearchLink" href="#" target="_blank" rel="noopener" class="mini-btn" style="text-decoration:none; display:inline-flex; align-items:center; border-color:var(--yellow); color:var(--yellow);">🔍 Tìm ảnh Google</a>
+      </div>
       <div class="modal-details" id="modalDetails"></div>
       <div class="modal-actions">
         <button class="modal-btn primary" onclick="closeModal()">Tiếp tục</button>
@@ -879,6 +884,7 @@
     </div>
   </div>
 
+  <script src="food-images.js"></script>
   <script>
     const DEFAULT_LIKE = [
       "Ốc hương", "Sò điệp", "Nghêu", "Bún mộc", "Cà ri", "Gà rán", "Sữa chua", "Sữa tươi",
@@ -1154,25 +1160,38 @@
       return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     }
 
-    function loadFoodImageMultiSource(name, mode, imgEl) {
-      const clean = name.replace(/\(.*?\)/g, '').trim();
-      const sources = [
-        `https://loremflickr.com/600/400/${encodeURIComponent(clean)},food`,
-        `https://loremflickr.com/600/400/vietnamese,food`
-      ];
-      let idx = 0;
+    function saveGoogleImageLink() {
+      const url = document.getElementById('googleImgInput').value.trim();
+      if (!url) return;
+      const saved = JSON.parse(localStorage.getItem('customFoodImageUrls') || '{}');
+      saved[currentWinner] = url;
+      localStorage.setItem('customFoodImageUrls', JSON.stringify(saved));
+      if (typeof FOOD_IMAGE_MAP !== 'undefined') {
+        if (!FOOD_IMAGE_MAP[currentWinner]) FOOD_IMAGE_MAP[currentWinner] = {};
+        FOOD_IMAGE_MAP[currentWinner].url = url;
+      }
+      loadFoodImageMultiSource(currentWinner, state.mode, document.getElementById('modalPhoto'));
+    }
 
+    function loadFoodImageMultiSource(name, mode, imgEl) {
       imgEl.style.display = 'block';
+      const saved = JSON.parse(localStorage.getItem('customFoodImageUrls') || '{}');
+      const savedUrl = saved[name];
+
       imgEl.onerror = () => {
-        idx++;
-        if (idx < sources.length) {
-          imgEl.src = sources[idx];
-        } else {
-          imgEl.onerror = null;
-          imgEl.src = createCyberFoodImageDataUri(name, mode);
-        }
+        imgEl.onerror = null;
+        imgEl.src = createCyberFoodImageDataUri(name, mode);
       };
-      imgEl.src = sources[0];
+
+      if (savedUrl) {
+        imgEl.src = savedUrl;
+        return;
+      }
+      if (typeof getOfflineFoodImage === 'function') {
+        imgEl.src = getOfflineFoodImage(name, getFoodVisual(name), mode);
+        return;
+      }
+      imgEl.src = createCyberFoodImageDataUri(name, mode);
     }
 
     function getFoodDetails(name, mode) {
@@ -1453,6 +1472,14 @@
       fallbackEl.style.display = 'none';
       loadFoodImageMultiSource(winner, state.mode, photoEl);
 
+      const saved = JSON.parse(localStorage.getItem('customFoodImageUrls') || '{}');
+      const existingUrl = saved[winner] || (typeof FOOD_IMAGE_MAP !== 'undefined' && FOOD_IMAGE_MAP[winner] && FOOD_IMAGE_MAP[winner].url) || '';
+      document.getElementById('googleImgInput').value = existingUrl;
+      document.getElementById('googleSearchLink').href =
+        typeof getGoogleImageSearchUrl === 'function'
+          ? getGoogleImageSearchUrl(winner)
+          : `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(winner + ' món ăn')}`;
+
       renderModalDetails();
       document.getElementById('resultModal').classList.add('show');
     }
@@ -1527,5 +1554,5 @@
     renderList();
     drawWheel();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed36fc7c743201',t:'MTc5NTQwNTg3OQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed36fc7c743201',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed5a0eef3e0930',t:'MTc5NTQwNzMxNg=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed5a0eef3e0930',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
