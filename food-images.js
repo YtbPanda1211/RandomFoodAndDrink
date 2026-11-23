@@ -1,26 +1,26 @@
-// File chuyên chứa hình ảnh mô tả cho từng món ăn (hoạt động 100% offline không cần mạng)
-// Bạn có thể thay thế giá trị của từng món bằng đường dẫn ảnh thật trong máy, ví dụ: "images/oc-huong.jpg"
+// File chuyên chứa đường dẫn link hình ảnh từ Google cho từng món ăn
+// Bạn chỉ cần dán link ảnh (Copy image address từ Google) vào thuộc tính `url` của từng món:
 
 const FOOD_IMAGE_MAP = {
-  "Ốc hương": { icon: "🐚", color: "#00f3ff", desc: "Ốc hương nướng/xào bơ tỏi" },
-  "Sò điệp": { icon: "🐚", color: "#00f3ff", desc: "Sò điệp nướng mỡ hành" },
-  "Nghêu": { icon: "🐚", color: "#00ff9d", desc: "Nghêu hấp sả" },
-  "Bún mộc": { icon: "🍜", color: "#00f3ff", desc: "Bún mộc giò heo" },
-  "Cà ri": { icon: "🍛", color: "#fcee0a", desc: "Cà ri gà/bò" },
-  "Gà rán": { icon: "🍗", color: "#fcee0a", desc: "Gà rán giòn rụm" },
-  "Sữa chua": { icon: "🥣", color: "#00ff9d", desc: "Sữa chua mát lạnh" },
-  "Sữa tươi": { icon: "🥛", color: "#00f3ff", desc: "Sữa tươi nguyên chất" },
-  "Bánh plan": { icon: "🍮", color: "#fcee0a", desc: "Bánh flan caramel" },
-  "Pizza": { icon: "🍕", color: "#ff007f", desc: "Pizza phô mai" },
-  "Phở": { icon: "🍜", color: "#00f3ff", desc: "Phở bò truyền thống" },
-  "Bún bò huế": { icon: "🍜", color: "#ff007f", desc: "Bún bò Huế đậm đà" },
-  "Cơm gà xối mỡ": { icon: "🍚", color: "#fcee0a", desc: "Cơm gà xối mỡ giòn" },
-  "Cơm sườn": { icon: "🍚", color: "#fcee0a", desc: "Cơm tấm sườn bì chả" },
-  "Bánh mì ốp la": { icon: "🥖", color: "#fcee0a", desc: "Bánh mì trứng ốp la" },
-  "Matcha Latte": { icon: "🍵", color: "#00ff9d", desc: "Matcha Latte béo thơm" },
-  "Tacos": { icon: "🌮", color: "#fcee0a", desc: "Tacos nhân thịt" },
-  "Hồng trà Ngô Gia": { icon: "🧋", color: "#ff007f", desc: "Hồng trà Ngô Gia" },
-  "Mì ramen (k thích)": { icon: "🍜", color: "#ff007f", desc: "Mì Ramen Nhật Bản" }
+  "Ốc hương": { url: "", icon: "🐚", color: "#00f3ff", desc: "Ốc hương nướng/xào bơ tỏi" },
+  "Sò điệp": { url: "", icon: "🐚", color: "#00f3ff", desc: "Sò điệp nướng mỡ hành" },
+  "Nghêu": { url: "", icon: "🐚", color: "#00ff9d", desc: "Nghêu hấp sả" },
+  "Bún mộc": { url: "", icon: "🍜", color: "#00f3ff", desc: "Bún mộc giò heo" },
+  "Cà ri": { url: "", icon: "🍛", color: "#fcee0a", desc: "Cà ri gà/bò" },
+  "Gà rán": { url: "", icon: "🍗", color: "#fcee0a", desc: "Gà rán giòn rụm" },
+  "Sữa chua": { url: "", icon: "🥣", color: "#00ff9d", desc: "Sữa chua mát lạnh" },
+  "Sữa tươi": { url: "", icon: "🥛", color: "#00f3ff", desc: "Sữa tươi nguyên chất" },
+  "Bánh plan": { url: "", icon: "🍮", color: "#fcee0a", desc: "Bánh flan caramel" },
+  "Pizza": { url: "", icon: "🍕", color: "#ff007f", desc: "Pizza phô mai" },
+  "Phở": { url: "", icon: "🍜", color: "#00f3ff", desc: "Phở bò truyền thống" },
+  "Bún bò huế": { url: "", icon: "🍜", color: "#ff007f", desc: "Bún bò Huế đậm đà" },
+  "Cơm gà xối mỡ": { url: "", icon: "🍚", color: "#fcee0a", desc: "Cơm gà xối mỡ giòn" },
+  "Cơm sườn": { url: "", icon: "🍚", color: "#fcee0a", desc: "Cơm tấm sườn bì chả" },
+  "Bánh mì ốp la": { url: "", icon: "🥖", color: "#fcee0a", desc: "Bánh mì trứng ốp la" },
+  "Matcha Latte": { url: "", icon: "🍵", color: "#00ff9d", desc: "Matcha Latte béo thơm" },
+  "Tacos": { url: "", icon: "🌮", color: "#fcee0a", desc: "Tacos nhân thịt" },
+  "Hồng trà Ngô Gia": { url: "", icon: "🧋", color: "#ff007f", desc: "Hồng trà Ngô Gia" },
+  "Mì ramen (k thích)": { url: "", icon: "🍜", color: "#ff007f", desc: "Mì Ramen Nhật Bản" }
 };
 
 function buildOfflineFoodSvg(name, icon, accent, subtitle) {
@@ -54,13 +54,21 @@ function buildOfflineFoodSvg(name, icon, accent, subtitle) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
+function getGoogleImageSearchUrl(name) {
+  const clean = String(name).replace(/\(.*?\)/g, "").trim();
+  return `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(clean + " món ăn")}`;
+}
+
 function getOfflineFoodImage(name, fallbackIcon, mode) {
   const entry = FOOD_IMAGE_MAP[name];
+  if (entry && entry.url && entry.url.trim() !== "") {
+    return entry.url.trim();
+  }
   if (entry && entry.src) {
     return entry.src;
   }
   const icon = (entry && entry.icon) || fallbackIcon || "🍽️";
   const color = (entry && entry.color) || (mode === "like" ? "#00f3ff" : "#ff007f");
-  const desc = (entry && entry.desc) || "HÌNH ẢNH MÓN ĂN (OFFLINE)";
+  const desc = (entry && entry.desc) || "CHƯA CÓ LINK ẢNH GOOGLE";
   return buildOfflineFoodSvg(name, icon, color, desc);
 }
