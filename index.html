@@ -23,9 +23,15 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
+      touch-action: manipulation;
       font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -172,6 +178,48 @@
       }
     }
 
+    @media (max-width: 640px) {
+      .container {
+        padding: 14px 10px 28px;
+      }
+      .cyber-panel {
+        padding: 14px 12px;
+      }
+      .mode-switcher {
+        gap: 8px;
+      }
+      .mode-btn {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+      }
+      .wheel-wrapper {
+        width: min(350px, 88vw);
+        height: min(350px, 88vw);
+        margin: 6px 0 16px;
+      }
+      .center-hub {
+        width: 56px;
+        height: 56px;
+        font-size: 0.7rem;
+      }
+      .spin-btn {
+        width: 100%;
+        padding: 13px 20px;
+        font-size: 1.05rem;
+      }
+      .items-list {
+        grid-template-columns: 1fr;
+        max-height: 260px;
+      }
+      .modal-card {
+        padding: 18px 14px;
+      }
+      .modal-photo-wrap {
+        height: 170px;
+      }
+    }
+
     /* Cyber Panel */
     .cyber-panel {
       background: var(--bg-panel);
@@ -197,8 +245,8 @@
 
     .wheel-wrapper {
       position: relative;
-      width: min(520px, 88vw);
-      height: min(520px, 88vw);
+      width: min(600px, 90vw);
+      height: min(600px, 90vw);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -884,7 +932,7 @@
         <a id="googleSearchLink" href="#" target="_blank" rel="noopener" class="mini-btn" style="text-decoration:none; display:inline-flex; align-items:center; border-color:var(--yellow); color:var(--yellow);">🔍 Tìm ảnh Google</a>
       </div>
       <div class="modal-details" id="modalDetails"></div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="modalActions">
         <button class="modal-btn primary" onclick="closeModal()">Tiếp tục</button>
         <button class="modal-btn secondary" onclick="closeModal(); spinWheel();">Quay lại</button>
       </div>
@@ -1488,6 +1536,10 @@
           : `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(winner + ' món ăn')}`;
 
       renderModalDetails();
+      document.getElementById('modalActions').innerHTML = `
+        <button class="modal-btn primary" onclick="closeModal()">Tiếp tục</button>
+        <button class="modal-btn secondary" onclick="closeModal(); spinWheel();">Quay lại</button>
+      `;
       document.getElementById('resultModal').classList.add('show');
     }
 
@@ -1511,10 +1563,24 @@
             <div class="item-thumb">${getFoodVisual(item)}</div>
             <span class="item-name" title="${item}">${idx + 1}. ${item}</span>
           </div>
-          <button class="remove-chip" title="Xóa" onclick="removeItem(${idx})">×</button>
+          <div style="display:flex; align-items:center; gap:2px;">
+            <button class="remove-chip" title="Sửa tên" onclick="editItem(${idx})" style="font-size:0.82rem;">✏️</button>
+            <button class="remove-chip" title="Xóa" onclick="removeItem(${idx})">×</button>
+          </div>
         `;
         listEl.appendChild(chip);
       });
+    }
+
+    function editItem(idx) {
+      if (state.isSpinning) return;
+      const currentName = state[state.mode][idx];
+      const nextName = prompt('Chỉnh sửa tên món ăn:', currentName);
+      if (nextName !== null && nextName.trim() !== '') {
+        state[state.mode][idx] = nextName.trim();
+        renderList();
+        drawWheel();
+      }
     }
 
     function removeItem(idx) {
@@ -1568,6 +1634,9 @@
           : `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(item.text + ' món ăn')}`;
 
       renderModalDetails();
+      document.getElementById('modalActions').innerHTML = `
+        <button class="modal-btn primary" onclick="closeModal()">Đóng</button>
+      `;
       document.getElementById('resultModal').classList.add('show');
     }
 
@@ -1588,8 +1657,93 @@
     }
 
     // Init
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = 600 * dpr;
+    canvas.height = 600 * dpr;
+    ctx.scale(dpr, dpr);
+
+    // Override drawWheel center/radius to use logical 600x600
+    const origDrawWheel = drawWheel;
+    drawWheel = function() {
+      const items = getCurrentItems();
+      const cx = 300;
+      const cy = 300;
+      const radius = 290;
+
+      ctx.clearRect(0, 0, 600, 600);
+
+      if (items.length === 0) {
+        ctx.fillStyle = '#121629';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#7a88a8';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Danh sách trống', cx, cy);
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / items.length;
+      const palette = state.mode === 'like' ? LIKE_COLORS : DISLIKE_COLORS;
+
+      for (let i = 0; i < items.length; i++) {
+        const startAngle = state.rotation + i * sliceAngle - Math.PI / 2;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        ctx.fillStyle = palette[i % palette.length];
+        ctx.fill();
+
+        ctx.lineWidth = items.length > 30 ? 1 : 2;
+        ctx.strokeStyle = '#07080f';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#07080f';
+        const fontSize = items.length > 45 ? 13 : items.length > 20 ? 16 : 20;
+        ctx.font = `bold ${fontSize}px sans-serif`;
+
+        let label = items[i];
+        const icon = getFoodVisual(label);
+        const fullText = `${icon} ${label}`;
+        const splitLimit = items.length > 45 ? 16 : 20;
+
+        if (fullText.length > splitLimit) {
+          const mid = Math.floor(fullText.length / 2);
+          let splitIdx = fullText.lastIndexOf(' ', mid + 3);
+          if (splitIdx <= 2) splitIdx = fullText.indexOf(' ', mid - 3);
+          if (splitIdx <= 2) splitIdx = mid;
+
+          let line1 = fullText.slice(0, splitIdx).trim();
+          let line2 = fullText.slice(splitIdx).trim();
+          if (line2.length > splitLimit) line2 = line2.slice(0, splitLimit - 1) + '…';
+
+          ctx.fillText(line1, radius - 14, -fontSize * 0.22);
+          ctx.fillText(line2, radius - 14, fontSize * 0.85);
+        } else {
+          ctx.fillText(fullText, radius - 14, fontSize / 3);
+        }
+        ctx.restore();
+      }
+    };
+
+    document.getElementById('resultModal').addEventListener('click', (e) => {
+      if (e.target.id === 'resultModal') closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
     renderList();
     drawWheel();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed70513d3a277e',t:'MTc5NTQwODIyOA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed70513d3a277e',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
