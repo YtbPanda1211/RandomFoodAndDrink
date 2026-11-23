@@ -1,1 +1,1489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CYBER-WHEEL // VÒNG QUAY ẨM THỰC</title>
+  <style>
+    :root {
+      --bg-dark: #07080f;
+      --bg-panel: rgba(13, 16, 30, 0.88);
+      --cyan: #00f3ff;
+      --magenta: #ff007f;
+      --yellow: #fcee0a;
+      --purple: #9d00ff;
+      --green: #00ff9d;
+      --text-main: #e6f1ff;
+      --text-dim: #7a88a8;
+      --border-cyan: rgba(0, 243, 255, 0.45);
+      --border-magenta: rgba(255, 0, 127, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(0, 243, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(255, 0, 127, 0.08) 0%, transparent 40%),
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.14) 0px,
+        rgba(0, 0, 0, 0.14) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 20px 18px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .cyber-badge {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      border: 1px solid var(--border-cyan);
+      padding: 4px 12px;
+      margin-bottom: 10px;
+      background: rgba(0, 243, 255, 0.06);
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #ffffff, var(--magenta));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 25px rgba(0, 243, 255, 0.35);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mode Switcher */
+    .mode-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      position: relative;
+      padding: 12px 26px;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 2px solid transparent;
+      background: var(--bg-panel);
+      color: var(--text-dim);
+      cursor: pointer;
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      transition: all 0.25s ease;
+    }
+
+    .mode-btn.like-btn {
+      border-color: rgba(0, 243, 255, 0.3);
+    }
+
+    .mode-btn.like-btn.active,
+    .mode-btn.like-btn:hover {
+      color: var(--bg-dark);
+      background: var(--cyan);
+      box-shadow: 0 0 24px rgba(0, 243, 255, 0.55);
+    }
+
+    .mode-btn.dislike-btn {
+      border-color: rgba(255, 0, 127, 0.3);
+    }
+
+    .mode-btn.dislike-btn.active,
+    .mode-btn.dislike-btn:hover {
+      color: #fff;
+      background: var(--magenta);
+      box-shadow: 0 0 24px rgba(255, 0, 127, 0.55);
+    }
+
+    .count-pill {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.35);
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cyber Panel */
+    .cyber-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-cyan);
+      padding: 22px;
+      position: relative;
+      clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 243, 255, 0.04);
+    }
+
+    body.mode-dislike .cyber-panel {
+      border-color: var(--border-magenta);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 127, 0.05);
+    }
+
+    /* Wheel Section */
+    .wheel-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: min(520px, 88vw);
+      height: min(520px, 88vw);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0 22px;
+    }
+
+    .wheel-glow-ring {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 2px dashed rgba(0, 243, 255, 0.45);
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.25), inset 0 0 35px rgba(0, 243, 255, 0.15);
+      pointer-events: none;
+      animation: spinSlow 24s linear infinite;
+    }
+
+    body.mode-dislike .wheel-glow-ring {
+      border-color: rgba(255, 0, 127, 0.5);
+      box-shadow: 0 0 35px rgba(255, 0, 127, 0.25), inset 0 0 35px rgba(255, 0, 127, 0.15);
+    }
+
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    canvas#wheelCanvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      filter: drop-shadow(0 0 18px rgba(0, 0, 0, 0.85));
+    }
+
+    /* Pointer at top */
+    .pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 34px solid var(--yellow);
+      filter: drop-shadow(0 0 10px rgba(252, 238, 10, 0.9));
+      z-index: 10;
+    }
+
+    .pointer::after {
+      content: "";
+      position: absolute;
+      top: -36px;
+      left: -8px;
+      width: 16px;
+      height: 8px;
+      background: #fff;
+      border-radius: 2px;
+    }
+
+    /* Center Hub */
+    .center-hub {
+      position: absolute;
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1c223d 0%, #090b14 75%);
+      border: 3px solid var(--cyan);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-weight: 900;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    body.mode-dislike .center-hub {
+      border-color: var(--magenta);
+      color: var(--magenta);
+      box-shadow: 0 0 20px rgba(255, 0, 127, 0.65);
+    }
+
+    /* Spin Controls */
+    .spin-controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .spin-btn {
+      padding: 15px 46px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      color: #07080f;
+      background: linear-gradient(90deg, var(--yellow), #ffae00);
+      clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+      box-shadow: 0 0 25px rgba(252, 238, 10, 0.5);
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 36px rgba(252, 238, 10, 0.8);
+    }
+
+    .spin-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-label input {
+      accent-color: var(--cyan);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Right Panel: List & History */
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+
+    body.mode-dislike .panel-title {
+      color: var(--magenta);
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      color: var(--text-main);
+      font-size: 0.92rem;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.25);
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .add-row input {
+      flex: 1;
+      padding: 9px 12px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .add-btn {
+      padding: 9px 16px;
+      background: rgba(0, 243, 255, 0.15);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+    }
+
+    .add-btn:hover {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .items-list {
+      max-height: 330px;
+      overflow-y: auto;
+      padding-right: 6px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
+    }
+
+    .items-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .items-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 243, 255, 0.4);
+      border-radius: 3px;
+    }
+
+    .item-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.84rem;
+      transition: border-color 0.2s;
+    }
+
+    .item-chip-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(0, 243, 255, 0.1);
+      border: 1px solid rgba(0, 243, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    body.mode-dislike .item-thumb {
+      background: rgba(255, 0, 127, 0.1);
+      border-color: rgba(255, 0, 127, 0.35);
+    }
+
+    .item-chip:hover {
+      border-color: var(--cyan);
+    }
+
+    .item-chip span.item-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .remove-chip {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.95rem;
+      padding: 0 3px;
+    }
+
+    .remove-chip:hover {
+      color: var(--magenta);
+    }
+
+    /* History */
+    .history-box {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      max-height: 110px;
+      overflow-y: auto;
+    }
+
+    .history-tag {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      background: rgba(0, 243, 255, 0.1);
+      border: 1px solid rgba(0, 243, 255, 0.35);
+      color: var(--cyan);
+      font-family: 'Courier New', monospace;
+    }
+
+    .history-tag.dislike {
+      background: rgba(255, 0, 127, 0.1);
+      border-color: rgba(255, 0, 127, 0.35);
+      color: var(--magenta);
+    }
+
+    .mini-btn {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .mini-btn:hover {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    /* Result Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 5, 12, 0.84);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-card {
+      background: #0c0f1d;
+      border: 2px solid var(--yellow);
+      box-shadow: 0 0 50px rgba(252, 238, 10, 0.35);
+      padding: 26px 24px;
+      max-width: 540px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+    }
+
+    .modal-photo-wrap {
+      position: relative;
+      width: 100%;
+      height: 210px;
+      margin: 10px auto 14px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 24px rgba(0, 243, 255, 0.35);
+      background: radial-gradient(circle, rgba(0, 243, 255, 0.18) 0%, rgba(12, 15, 29, 0.95) 80%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.mode-dislike .modal-photo-wrap {
+      border-color: var(--magenta);
+      box-shadow: 0 0 24px rgba(255, 0, 127, 0.35);
+      background: radial-gradient(circle, rgba(255, 0, 127, 0.18) 0%, rgba(12, 15, 29, 0.95) 80%);
+    }
+
+    .modal-photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .modal-photo-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 64px;
+    }
+
+    .modal-photo-fallback span {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Courier New', monospace;
+    }
+
+    .modal-details {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(0, 243, 255, 0.25);
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    body.mode-dislike .modal-details {
+      border-color: rgba(255, 0, 127, 0.25);
+    }
+
+    .detail-row {
+      margin-bottom: 6px;
+    }
+
+    .detail-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .detail-label {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    body.mode-dislike .detail-label {
+      color: var(--magenta);
+    }
+
+    .recipe-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 12px 0 8px;
+      padding: 8px 12px;
+      background: rgba(0, 243, 255, 0.08);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      border-radius: 6px;
+      flex-wrap: wrap;
+    }
+
+    .servings-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .srv-btn {
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--cyan);
+      background: rgba(0, 0, 0, 0.5);
+      color: var(--cyan);
+      font-weight: 900;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .srv-btn:hover {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .recipe-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+
+    .recipe-section h4 {
+      font-size: 0.88rem;
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .recipe-list {
+      padding-left: 18px;
+      margin: 0;
+      font-size: 0.86rem;
+      color: var(--text-main);
+    }
+
+    .recipe-list li {
+      margin-bottom: 4px;
+    }
+
+    .recipe-edit-area {
+      width: 100%;
+      min-height: 90px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid var(--cyan);
+      color: var(--text-main);
+      padding: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      margin-top: 6px;
+      border-radius: 4px;
+    }
+
+    .modal-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 3px;
+      color: var(--yellow);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .modal-visual {
+      width: 112px;
+      height: 112px;
+      margin: 8px auto 14px;
+      border-radius: 18px;
+      background: radial-gradient(circle, rgba(0, 243, 255, 0.22) 0%, rgba(12, 15, 29, 0.9) 75%);
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 28px rgba(0, 243, 255, 0.45), inset 0 0 18px rgba(0, 243, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 58px;
+    }
+
+    body.mode-dislike .modal-visual {
+      background: radial-gradient(circle, rgba(255, 0, 127, 0.22) 0%, rgba(12, 15, 29, 0.9) 75%);
+      border-color: var(--magenta);
+      box-shadow: 0 0 28px rgba(255, 0, 127, 0.45), inset 0 0 18px rgba(255, 0, 127, 0.2);
+    }
+
+    .modal-result {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(0, 243, 255, 0.6);
+      margin: 14px 0 24px;
+      line-height: 1.3;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .modal-btn {
+      padding: 10px 22px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .modal-btn.primary {
+      background: var(--cyan);
+      color: var(--bg-dark);
+    }
+
+    .modal-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--magenta);
+      color: var(--magenta);
+    }
+  </style>
+</head>
+<body class="mode-like">
+  <div class="container">
+    <header>
+      <div class="cyber-badge">SYSTEM // NEON ROULETTE v2.6</div>
+      <h1>Vòng Quay Ẩm Thực Cyberpunk</h1>
+      <p class="subtitle">Chọn chế độ vòng quay và nhấn QUAY để hệ thống chọn ngẫu nhiên cho bạn</p>
+    </header>
+
+    <div class="mode-switcher">
+      <button class="mode-btn like-btn active" id="btnModeLike" onclick="switchMode('like')">
+        ⚡ Món Ăn Được / Thích <span class="count-pill" id="countLike">0</span>
+      </button>
+      <button class="mode-btn dislike-btn" id="btnModeDislike" onclick="switchMode('dislike')">
+        ☠️ Món Không Ăn / Không Thích <span class="count-pill" id="countDislike">0</span>
+      </button>
+    </div>
+
+    <div class="main-grid">
+      <!-- Wheel Panel -->
+      <div class="cyber-panel wheel-stage">
+        <div class="wheel-wrapper">
+          <div class="wheel-glow-ring"></div>
+          <div class="pointer"></div>
+          <canvas id="wheelCanvas" width="600" height="600"></canvas>
+          <div class="center-hub" id="centerHub">LUCKY</div>
+        </div>
+
+        <div class="spin-controls">
+          <button class="spin-btn" id="spinBtn" onclick="spinWheel()">QUAY NGAY</button>
+          <label class="toggle-label">
+            <input type="checkbox" id="removeAfterSpin" />
+            <span>Xóa món sau khi trúng</span>
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="soundToggle" checked />
+            <span>Âm thanh</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- List & History Panel -->
+      <div class="cyber-panel">
+        <div class="panel-header">
+          <span class="panel-title" id="listTitle">Danh sách món ăn được</span>
+          <button class="mini-btn" onclick="resetCurrentList()">Khôi phục mặc định</button>
+        </div>
+
+        <input type="text" class="search-box" id="searchInput" placeholder="Tìm kiếm món trong vòng quay..." oninput="renderList()" />
+
+        <div class="add-row">
+          <input type="text" id="newItemInput" placeholder="Thêm món mới..." onkeydown="if(event.key==='Enter') addNewItem()" />
+          <button class="add-btn" onclick="addNewItem()">+ Thêm</button>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="history-box">
+          <div class="panel-header" style="margin-bottom: 6px; padding-bottom: 6px;">
+            <span class="panel-title" style="font-size: 0.9rem;">Lịch sử đã quay</span>
+            <button class="mini-btn" onclick="clearHistory()">Xóa lịch sử</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <span style="color: var(--text-dim); font-size: 0.82rem;">Chưa có lượt quay nào.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-card">
+      <div class="modal-tag" id="modalTag">KẾT QUẢ NGẪU NHIÊN</div>
+      <div class="modal-photo-wrap">
+        <img id="modalPhoto" alt="Hình ảnh món ăn" />
+        <div class="modal-photo-fallback" id="modalPhotoFallback">
+          <div id="modalVisual">🍽️</div>
+          <span>Ảnh thực tế sẽ hiển thị khi có kết nối mạng</span>
+        </div>
+      </div>
+      <div class="modal-result" id="modalResult" style="margin: 8px 0 14px;">---</div>
+      <div class="modal-details" id="modalDetails"></div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" onclick="closeModal()">Tiếp tục</button>
+        <button class="modal-btn secondary" onclick="closeModal(); spinWheel();">Quay lại</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_LIKE = [
+      "Ốc hương", "Sò điệp", "Nghêu", "Bún mộc", "Cà ri", "Gà rán", "Sữa chua", "Sữa tươi",
+      "Bánh plan", "Sữa (Dalatmilk + Long Thành Milk)", "Pizza", "Nui xào bò", "Kẹo sữa bò",
+      "Bánh tráng nướng", "Bánh tráng cuốn", "Cá viên chiên", "Bánh bao", "Hoành thánh chiên",
+      "Tóp mỡ", "Xôi gà", "Xôi mặn", "Bánh mì chà bông", "Bánh mì ốp la", "Kim bắp",
+      "Hot dog (tam giác)", "Cơm gà xối mỡ", "Cơm sườn", "Cơm chiên dương châu", "Phở",
+      "Bánh bột lọc", "Mì", "Cháo trắng", "Bún bò huế", "Sữa đậu nành", "Bánh orio",
+      "Bánh tiêu phô mai", "Bánh bao hấp", "Bánh bột lọc", "Cháo trắng", "Bún bò huế",
+      "Gỏi cuốn", "Nem nướng", "Bánh hỏi", "Váng sữa", "Tokoyaki", "Bánh ướt", "Bún mắm",
+      "Cháo lòng (bỏ chèo quay thôi)", "Bò lá lốp", "Bún chả HN", "Cá diêu hồng", "Khô cá dứa",
+      "Mì xào bò", "Nui xào bò", "Bột chiên", "Bánh trứng tart", "Thơm thái", "Matcha Latte",
+      "Sữa tươi trân châu đường đen", "Tacos", "Rong biển", "Xôi ghẹ", "Mì khô xá xíu",
+      "Lucky sundae dâu tây (Mixue)", "Cá lóc kho", "Bánh cá", "Bánh kem Hỷ Lâm Môn", "Bò né"
+    ];
+
+    const DEFAULT_DISLIKE = [
+      "Hồng trà Ngô Gia",
+      "Mỡ",
+      "Da",
+      "Lòng trong cháo lòng (k ăn đc do thấy ghê)",
+      "Các loại trà sữa (k thích)",
+      "Bánh cuốn",
+      "Chân gà sốt thái (ko ăn đc chân gà)",
+      "Mì ramen (k thích)"
+    ];
+
+    let state = {
+      mode: 'like',
+      like: [...DEFAULT_LIKE],
+      dislike: [...DEFAULT_DISLIKE],
+      history: [],
+      rotation: 0,
+      isSpinning: false
+    };
+
+    const LIKE_COLORS = ['#00f3ff', '#0099ff', '#7000ff', '#00ff9d', '#00c3ff', '#4d4dff'];
+    const DISLIKE_COLORS = ['#ff007f', '#b8005c', '#ff3b3b', '#9d00ff', '#ff0055', '#6b00b3'];
+
+    function getFoodVisual(name) {
+      const n = name.toLowerCase();
+      if (n.includes('ốc') || n.includes('sò') || n.includes('nghêu')) return '🐚';
+      if (n.includes('bún') || n.includes('phở') || n.includes('mì') || n.includes('nui') || n.includes('ramen')) return '🍜';
+      if (n.includes('cà ri')) return '🍛';
+      if (n.includes('gà rán') || n.includes('chân gà')) return '🍗';
+      if (n.includes('sữa chua') || n.includes('váng sữa')) return '🥣';
+      if (n.includes('sữa') || n.includes('matcha') || n.includes('trà')) return '🧋';
+      if (n.includes('plan') || n.includes('tart') || n.includes('kem')) return '🍮';
+      if (n.includes('pizza')) return '🍕';
+      if (n.includes('kẹo')) return '🍬';
+      if (n.includes('bánh tráng') || n.includes('gỏi cuốn') || n.includes('bánh cuốn') || n.includes('bánh ướt')) return '🌯';
+      if (n.includes('cá viên') || n.includes('bột chiên') || n.includes('hoành thánh')) return '🍢';
+      if (n.includes('bánh bao')) return '🥟';
+      if (n.includes('tóp mỡ') || n.includes('mỡ') || n.includes('da')) return '🥓';
+      if (n.includes('xôi') || n.includes('cơm') || n.includes('cháo')) return '🍚';
+      if (n.includes('bánh mì')) return '🥖';
+      if (n.includes('kim bắp')) return '🍙';
+      if (n.includes('hot dog')) return '🌭';
+      if (n.includes('bánh bột lọc') || n.includes('bánh hỏi')) return '🥟';
+      if (n.includes('orio') || n.includes('bánh tiêu') || n.includes('bánh cá')) return '🍪';
+      if (n.includes('nem nướng') || n.includes('bò lá lốp') || n.includes('bò né')) return '🥩';
+      if (n.includes('tokoyaki')) return '🍡';
+      if (n.includes('cá ')) return '🐟';
+      if (n.includes('thơm')) return '🍍';
+      if (n.includes('tacos')) return '🌮';
+      if (n.includes('rong biển')) return '🌿';
+      if (n.includes('sundae') || n.includes('mixue')) return '🍨';
+      if (n.includes('lòng')) return '🍲';
+      return '🍽️';
+    }
+
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Web Audio API for cyber sound effects
+    let audioCtx = null;
+    function playTick() {
+      if (!document.getElementById('soundToggle').checked) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(720, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.035);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    function playWin() {
+      if (!document.getElementById('soundToggle').checked) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          const start = audioCtx.currentTime + idx * 0.08;
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0.12, start);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start);
+          osc.stop(start + 0.26);
+        });
+      } catch (e) {}
+    }
+
+    function getCurrentItems() {
+      return state[state.mode];
+    }
+
+    function switchMode(mode) {
+      if (state.isSpinning) return;
+      state.mode = mode;
+      document.body.className = mode === 'like' ? 'mode-like' : 'mode-dislike';
+      document.getElementById('btnModeLike').classList.toggle('active', mode === 'like');
+      document.getElementById('btnModeDislike').classList.toggle('active', mode === 'dislike');
+      document.getElementById('listTitle').textContent =
+        mode === 'like' ? 'Danh sách món ăn được / thích' : 'Danh sách món không ăn / không thích';
+      document.getElementById('centerHub').textContent = mode === 'like' ? 'YUM!' : 'NOPE!';
+      state.rotation = 0;
+      renderList();
+      drawWheel();
+    }
+
+    function updateCounts() {
+      document.getElementById('countLike').textContent = state.like.length;
+      document.getElementById('countDislike').textContent = state.dislike.length;
+    }
+
+    function drawWheel() {
+      const items = getCurrentItems();
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const radius = cx - 10;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (items.length === 0) {
+        ctx.fillStyle = '#121629';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#7a88a8';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Danh sách trống', cx, cy);
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / items.length;
+      const palette = state.mode === 'like' ? LIKE_COLORS : DISLIKE_COLORS;
+
+      for (let i = 0; i < items.length; i++) {
+        const startAngle = state.rotation + i * sliceAngle - Math.PI / 2;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        ctx.fillStyle = palette[i % palette.length];
+        ctx.fill();
+
+        ctx.lineWidth = items.length > 30 ? 1 : 2;
+        ctx.strokeStyle = '#07080f';
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#07080f';
+        const fontSize = items.length > 45 ? 13 : items.length > 20 ? 16 : 20;
+        ctx.font = `bold ${fontSize}px sans-serif`;
+
+        let label = items[i];
+        const icon = getFoodVisual(label);
+        const maxLen = items.length > 45 ? 16 : 22;
+        if (label.length > maxLen) label = label.slice(0, maxLen - 1) + '…';
+
+        ctx.fillText(`${icon} ${label}`, radius - 14, fontSize / 3);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      const items = getCurrentItems();
+      if (state.isSpinning || items.length === 0) return;
+
+      state.isSpinning = true;
+      document.getElementById('spinBtn').disabled = true;
+
+      const startRot = state.rotation;
+      const extraSpins = 6 + Math.random() * 4; // 6-10 full rotations
+      const randomAngle = Math.random() * Math.PI * 2;
+      const targetRot = startRot + extraSpins * Math.PI * 2 + randomAngle;
+      const duration = 4600;
+      const startTime = performance.now();
+
+      const sliceAngle = (Math.PI * 2) / items.length;
+      let lastSliceIndex = -1;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        // Ease out quart
+        const ease = 1 - Math.pow(1 - t, 4);
+        state.rotation = startRot + (targetRot - startRot) * ease;
+        drawWheel();
+
+        // Tick sound on slice change
+        const normRot = ((state.rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const currentSlice = Math.floor(((Math.PI * 2 - normRot) % (Math.PI * 2)) / sliceAngle);
+        if (currentSlice !== lastSliceIndex) {
+          lastSliceIndex = currentSlice;
+          playTick();
+        }
+
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          state.isSpinning = false;
+          document.getElementById('spinBtn').disabled = false;
+          const winnerIndex = currentSlice % items.length;
+          const winner = items[winnerIndex];
+          handleWin(winner, winnerIndex);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function getFoodImageUrl(name) {
+      const clean = name.replace(/\(.*?\)/g, '').trim();
+      return `https://source.unsplash.com/600x400/?${encodeURIComponent(clean + ' food')}`;
+    }
+
+    function getFoodDetails(name, mode) {
+      const n = name.toLowerCase();
+      if (mode === 'dislike') {
+        return {
+          category: 'Danh sách hạn chế / Không thích',
+          taste: 'Không hợp khẩu vị hoặc không ăn được theo sở thích cá nhân.',
+          ingredients: name,
+          serving: 'Có thể bỏ qua hoặc đổi sang món khác trong vòng quay Món Ăn Được.',
+          calories: 'Tùy khẩu phần'
+        };
+      }
+      if (n.includes('ốc') || n.includes('sò') || n.includes('nghêu')) {
+        return {
+          category: 'Hải sản / Ốc',
+          taste: 'Giòn ngọt tự nhiên, đậm đà gia vị (bơ tỏi, sả ớt hoặc nướng mỡ hành).',
+          ingredients: 'Hải sản tươi, sả, ớt, tỏi, rau răm, nước chấm hải sản.',
+          serving: 'Ngon nhất khi ăn nóng vào buổi chiều tối cùng nước chấm chua cay.',
+          calories: '~180 - 320 kcal / phần'
+        };
+      }
+      if (n.includes('phở') || n.includes('bún') || n.includes('mì') || n.includes('nui')) {
+        return {
+          category: 'Món nước / Sợi',
+          taste: 'Nước dùng thanh ngọt hoặc đậm đà, sợi mềm dai hài hòa cùng thịt và rau.',
+          ingredients: 'Bún/phở/mì, nước hầm xương, thịt/hải sản, hành ngò, rau sống.',
+          serving: 'Phù hợp cho bữa sáng, trưa hoặc tối; thêm chanh ớt để dậy vị.',
+          calories: '~380 - 550 kcal / tô'
+        };
+      }
+      if (n.includes('cơm') || n.includes('xôi') || n.includes('cháo')) {
+        return {
+          category: 'Món chính / Chắc bụng',
+          taste: 'Dẻo thơm, đậm đà, dễ ăn và cung cấp năng lượng bền vững.',
+          ingredients: 'Gạo/nếp, thịt gà/sườn/trứng/ghẹ, đồ chua, hành phi, nước mắm.',
+          serving: 'Lý tưởng cho bữa trưa hoặc bữa tối cần nhiều năng lượng.',
+          calories: '~420 - 650 kcal / phần'
+        };
+      }
+      if (n.includes('sữa') || n.includes('matcha') || n.includes('sundae') || n.includes('váng sữa')) {
+        return {
+          category: 'Đồ uống / Tráng miệng mát lạnh',
+          taste: 'Béo ngậy, thơm dịu, ngọt thanh giúp giải nhiệt nhanh chóng.',
+          ingredients: 'Sữa tươi/sữa hạt, matcha/trân châu/dâu tây, đá hoặc kem lạnh.',
+          serving: 'Uống lạnh hoặc dùng làm món tráng miệng sau bữa ăn.',
+          calories: '~140 - 320 kcal / ly'
+        };
+      }
+      if (n.includes('bánh') || n.includes('pizza') || n.includes('tacos') || n.includes('hot dog') || n.includes('tokoyaki')) {
+        return {
+          category: 'Ăn vặt / Bánh',
+          taste: 'Thơm lừng, giòn rụm hoặc mềm mịn, kết hợp nhân mặn/ngọt hấp dẫn.',
+          ingredients: 'Bột mì/bột gạo, trứng, phô mai, thịt/xúc xích hoặc nhân ngọt.',
+          serving: 'Thích hợp ăn xế chiều hoặc nhâm nhi cùng bạn bè.',
+          calories: '~220 - 450 kcal / phần'
+        };
+      }
+      return {
+        category: 'Món ngon yêu thích',
+        taste: 'Hương vị đặc trưng hấp dẫn, hợp khẩu vị.',
+        ingredients: 'Nguyên liệu tươi ngon kết hợp gia vị truyền thống.',
+        serving: 'Thưởng thức ngay khi còn nóng hoặc theo sở thích.',
+        calories: '~200 - 450 kcal / phần'
+      };
+    }
+
+    let currentWinner = '';
+    let currentServings = 1;
+    let isEditingRecipe = false;
+    const customRecipes = {};
+
+    function getRecipeData(name, mode) {
+      if (customRecipes[name]) {
+        return customRecipes[name];
+      }
+      const n = name.toLowerCase();
+      if (mode === 'dislike') {
+        return {
+          ingredients: [
+            { item: name, amount: 1, unit: 'phần (tham khảo)' }
+          ],
+          steps: [
+            'Món này đang nằm trong danh sách hạn chế / không thích của bạn.',
+            'Bạn có thể bỏ qua hoặc chuyển sang vòng quay Món Ăn Được để chọn món khác.'
+          ]
+        };
+      }
+      if (n.includes('ốc') || n.includes('sò') || n.includes('nghêu')) {
+        return {
+          ingredients: [
+            { item: name, amount: 300, unit: 'g' },
+            { item: 'Sả cây đập dập', amount: 2, unit: 'cây' },
+            { item: 'Tỏi băm & ớt băm', amount: 1, unit: 'muỗng canh' },
+            { item: 'Bơ lạt hoặc dầu ăn', amount: 15, unit: 'g' },
+            { item: 'Rau răm & muối tiêu chanh', amount: 1, unit: 'ít' }
+          ],
+          steps: [
+            'Bước 1: Ngâm rửa sạch hải sản với nước vo gạo hoặc nước muối pha ớt khoảng 30 phút cho nhả sạch cát, sau đó vớt ra để ráo.',
+            'Bước 2: Phi thơm tỏi băm, sả và ớt với bơ lạt trên lửa vừa.',
+            'Bước 3: Cho hải sản vào đảo đều tay trên lửa lớn 4–6 phút, nêm thêm 1 muỗng cà phê hạt nêm và chút đường.',
+            'Bước 4: Khi hải sản vừa chín tới, rắc rau răm lên trên, tắt bếp và thưởng thức nóng cùng muối tiêu chanh.'
+          ]
+        };
+      }
+      if (n.includes('phở') || n.includes('bún') || n.includes('mì') || n.includes('nui')) {
+        return {
+          ingredients: [
+            { item: 'Bánh phở / Bún / Mì / Nui', amount: 150, unit: 'g' },
+            { item: 'Thịt (bò/gà/heo/xá xíu)', amount: 100, unit: 'g' },
+            { item: 'Nước dùng xương (hoặc nước sốt xào)', amount: 400, unit: 'ml' },
+            { item: 'Hành lá, ngò rí, hành tây', amount: 20, unit: 'g' },
+            { item: 'Gia vị (nước mắm, tiêu, hạt nêm)', amount: 1, unit: 'vừa đủ' }
+          ],
+          steps: [
+            'Bước 1: Sơ chế thịt thái lát mỏng, ướp nhẹ với chút hạt nêm và tiêu trong 10 phút.',
+            'Bước 2: Trụng sơ bánh phở/bún/mì/nui qua nước sôi khoảng 30–60 giây rồi cho vào tô.',
+            'Bước 3: Đun sôi nước dùng, nêm nếm vừa ăn, trụng chín thịt (hoặc xào săn thịt với tỏi nếu là món xào/khô).',
+            'Bước 4: Chan nước dùng nóng hổi vào tô (hoặc trộn đều sốt), thêm hành ngò, tiêu và thưởng thức ngay.'
+          ]
+        };
+      }
+      if (n.includes('cơm') || n.includes('xôi') || n.includes('cháo')) {
+        return {
+          ingredients: [
+            { item: 'Gạo / Gạo nếp', amount: 120, unit: 'g' },
+            { item: 'Thịt gà / Sườn / Trứng / Ghẹ', amount: 120, unit: 'g' },
+            { item: 'Hành phi & mỡ hành', amount: 1, unit: 'muỗng canh' },
+            { item: 'Đồ chua & dưa leo ăn kèm', amount: 50, unit: 'g' },
+            { item: 'Nước mắm pha / Nước tương', amount: 2, unit: 'muỗng canh' }
+          ],
+          steps: [
+            'Bước 1: Vo sạch gạo/nếp, nấu chín thành cơm/xôi/cháo với lượng nước phù hợp.',
+            'Bước 2: Ướp thịt với tỏi, hành tím, nước mắm, mật ong/đường khoảng 20 phút.',
+            'Bước 3: Chiên, nướng hoặc áp chảo thịt cho đến khi chín vàng đều và dậy mùi thơm.',
+            'Bước 4: Dọn cơm/xôi/cháo ra đĩa hoặc tô, xếp thịt lên trên, rưới mỡ hành, hành phi và dùng kèm đồ chua.'
+          ]
+        };
+      }
+      if (n.includes('sữa') || n.includes('matcha') || n.includes('sundae') || n.includes('váng sữa')) {
+        return {
+          ingredients: [
+            { item: 'Sữa tươi không đường / có đường', amount: 200, unit: 'ml' },
+            { item: 'Bột matcha / Đường đen / Dâu tây', amount: 15, unit: 'g' },
+            { item: 'Trân châu hoặc thạch (tùy chọn)', amount: 40, unit: 'g' },
+            { item: 'Đá viên', amount: 100, unit: 'g' }
+          ],
+          steps: [
+            'Bước 1: Hòa tan bột matcha/sốt đường đen với 30ml nước ấm, khuấy đều cho mịn.',
+            'Bước 2: Cho trân châu hoặc topping vào đáy ly.',
+            'Bước 3: Thêm đá viên và rót sữa tươi lạnh vào đầy ly.',
+            'Bước 4: Rưới phần matcha/sốt lên trên cùng, khuấy đều trước khi thưởng thức.'
+          ]
+        };
+      }
+      return {
+        ingredients: [
+          { item: `Nguyên liệu chính (${name})`, amount: 150, unit: 'g' },
+          { item: 'Gia vị cơ bản (muối, đường, tiêu, tỏi)', amount: 1, unit: 'ít' },
+          { item: 'Dầu ăn hoặc bơ', amount: 1, unit: 'muỗng canh' },
+          { item: 'Rau thơm / Đồ ăn kèm', amount: 30, unit: 'g' }
+        ],
+        steps: [
+          'Bước 1: Sơ chế sạch các nguyên liệu chính và để ráo nước.',
+          'Bước 2: Ướp hoặc trộn nguyên liệu với gia vị vừa ăn trong khoảng 10–15 phút.',
+          'Bước 3: Chế biến (chiên, nướng, hấp hoặc xào) ở nhiệt độ thích hợp cho đến khi chín vàng thơm.',
+          'Bước 4: Trình bày ra đĩa, thêm rau thơm hoặc nước chấm phù hợp và thưởng thức.'
+        ]
+      };
+    }
+
+    function changeServings(delta) {
+      currentServings = Math.max(1, Math.min(20, currentServings + delta));
+      renderModalDetails();
+    }
+
+    function toggleEditRecipe() {
+      isEditingRecipe = !isEditingRecipe;
+      renderModalDetails();
+    }
+
+    function saveCustomRecipe() {
+      const ingText = document.getElementById('editIngInput').value.trim();
+      const stepText = document.getElementById('editStepInput').value.trim();
+      const ingredients = ingText.split('\n').filter(Boolean).map(line => {
+        return { item: line, amount: null, unit: '' };
+      });
+      const steps = stepText.split('\n').filter(Boolean);
+      customRecipes[currentWinner] = { ingredients, steps };
+      isEditingRecipe = false;
+      renderModalDetails();
+    }
+
+    function renderModalDetails() {
+      const info = getFoodDetails(currentWinner, state.mode);
+      const recipe = getRecipeData(currentWinner, state.mode);
+
+      let ingHtml = '';
+      if (isEditingRecipe) {
+        const ingLines = recipe.ingredients.map(i =>
+          i.amount !== null ? `${i.item} (${Math.round(i.amount * currentServings * 10) / 10} ${i.unit})` : i.item
+        ).join('\n');
+        const stepLines = recipe.steps.join('\n');
+        ingHtml = `
+          <div class="recipe-section">
+            <h4>Chỉnh sửa nguyên liệu (mỗi dòng 1 món)</h4>
+            <textarea id="editIngInput" class="recipe-edit-area">${ingLines}</textarea>
+            <h4 style="margin-top:10px;">Chỉnh sửa các bước (mỗi dòng 1 bước)</h4>
+            <textarea id="editStepInput" class="recipe-edit-area">${stepLines}</textarea>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <button class="srv-btn" style="width:auto; padding:0 12px;" onclick="saveCustomRecipe()">Lưu công thức</button>
+              <button class="mini-btn" onclick="toggleEditRecipe()">Hủy</button>
+            </div>
+          </div>
+        `;
+      } else {
+        const ingItems = recipe.ingredients.map(i => {
+          if (i.amount !== null) {
+            const scaled = Math.round(i.amount * currentServings * 10) / 10;
+            return `<li><strong>${scaled} ${i.unit}</strong> ${i.item}</li>`;
+          }
+          return `<li>${i.item}</li>`;
+        }).join('');
+        const stepItems = recipe.steps.map(s => `<li>${s}</li>`).join('');
+
+        ingHtml = `
+          <div class="recipe-section">
+            <h4>Nguyên liệu chuẩn bị (${currentServings} người)</h4>
+            <ul class="recipe-list">${ingItems}</ul>
+          </div>
+          <div class="recipe-section">
+            <h4>Cách chế biến chi tiết</h4>
+            <ol class="recipe-list">${stepItems}</ol>
+          </div>
+        `;
+      }
+
+      document.getElementById('modalDetails').innerHTML = `
+        <div class="detail-row"><span class="detail-label">Phân loại:</span> ${info.category}</div>
+        <div class="detail-row"><span class="detail-label">Hương vị:</span> ${info.taste}</div>
+        <div class="detail-row"><span class="detail-label">Năng lượng ước tính:</span> ${info.calories}</div>
+        <div class="recipe-controls">
+          <div class="servings-box">
+            <span>Khẩu phần:</span>
+            <button class="srv-btn" onclick="changeServings(-1)">-</button>
+            <span>${currentServings} người</span>
+            <button class="srv-btn" onclick="changeServings(1)">+</button>
+          </div>
+          <button class="mini-btn" onclick="toggleEditRecipe()">${isEditingRecipe ? 'Đóng sửa' : '✏️ Tùy chỉnh công thức'}</button>
+        </div>
+        ${ingHtml}
+      `;
+    }
+
+    function handleWin(winner, index) {
+      playWin();
+      currentWinner = winner;
+      currentServings = 1;
+      isEditingRecipe = false;
+
+      state.history.unshift({ text: winner, mode: state.mode });
+      if (state.history.length > 20) state.history.pop();
+      renderHistory();
+
+      if (document.getElementById('removeAfterSpin').checked) {
+        state[state.mode].splice(index, 1);
+        renderList();
+        drawWheel();
+      }
+
+      document.getElementById('modalTag').textContent =
+        state.mode === 'like' ? '⚡ MÓN ĐƯỢC CHỌN ⚡' : '☠️ MÓN BỊ CHỌN ☠️';
+      document.getElementById('modalVisual').textContent = getFoodVisual(winner);
+      document.getElementById('modalResult').textContent = winner;
+
+      const photoEl = document.getElementById('modalPhoto');
+      const fallbackEl = document.getElementById('modalPhotoFallback');
+      photoEl.style.display = 'block';
+      fallbackEl.style.display = 'none';
+      photoEl.onerror = () => {
+        photoEl.style.display = 'none';
+        fallbackEl.style.display = 'flex';
+      };
+      photoEl.src = getFoodImageUrl(winner);
+
+      renderModalDetails();
+      document.getElementById('resultModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('resultModal').classList.remove('show');
+    }
+
+    function renderList() {
+      updateCounts();
+      const listEl = document.getElementById('itemsList');
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const items = getCurrentItems();
+
+      listEl.innerHTML = '';
+      items.forEach((item, idx) => {
+        if (query && !item.toLowerCase().includes(query)) return;
+        const chip = document.createElement('div');
+        chip.className = 'item-chip';
+        chip.innerHTML = `
+          <div class="item-chip-left">
+            <div class="item-thumb">${getFoodVisual(item)}</div>
+            <span class="item-name" title="${item}">${idx + 1}. ${item}</span>
+          </div>
+          <button class="remove-chip" title="Xóa" onclick="removeItem(${idx})">×</button>
+        `;
+        listEl.appendChild(chip);
+      });
+    }
+
+    function removeItem(idx) {
+      if (state.isSpinning) return;
+      state[state.mode].splice(idx, 1);
+      renderList();
+      drawWheel();
+    }
+
+    function addNewItem() {
+      const input = document.getElementById('newItemInput');
+      const val = input.value.trim();
+      if (!val) return;
+      state[state.mode].push(val);
+      input.value = '';
+      renderList();
+      drawWheel();
+    }
+
+    function resetCurrentList() {
+      if (state.isSpinning) return;
+      state[state.mode] = state.mode === 'like' ? [...DEFAULT_LIKE] : [...DEFAULT_DISLIKE];
+      renderList();
+      drawWheel();
+    }
+
+    function renderHistory() {
+      const el = document.getElementById('historyList');
+      if (state.history.length === 0) {
+        el.innerHTML = '<span style="color: var(--text-dim); font-size: 0.82rem;">Chưa có lượt quay nào.</span>';
+        return;
+      }
+      el.innerHTML = state.history
+        .map(h => `<span class="history-tag ${h.mode === 'dislike' ? 'dislike' : ''}">${h.text}</span>`)
+        .join('');
+    }
+
+    function clearHistory() {
+      state.history = [];
+      renderHistory();
+    }
+
+    // Init
+    renderList();
+    drawWheel();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ed293f9c8c28ee',t:'MTc5NTQwNTMxNw=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ed293f9c8c28ee',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
 
